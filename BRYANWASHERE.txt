@@ -1,3 +1,9 @@
 HI LINH
 
 whatup
+
+
+
+get new changes: (but commit changes first before retrieving files)
+go to remote, select fetch from -> origin (retrieve changes)
+then go to merge, local merge (should see changes) 
