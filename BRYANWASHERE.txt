@@ -3,6 +3,14 @@ HI LINH
 whatup
 
 
+ALWAYS GET CHANGES BEFORE DOING ANYTHING
+- fetch & merge (or pull)
+
+WHENEVER YOU MAKE A CHANGE, 
+
+PROPER BRIEF YET INFORMATIVE COMMENT
+
+
 
 get new changes: (but commit changes first before retrieving files)
 go to remote, select fetch from -> origin (retrieve changes)
