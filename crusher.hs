@@ -92,7 +92,7 @@ generateNewMoves initBoard history side =
 
 generateRightMoves :: Board -> [Board] -> Char -> Int -> [Board] -> [Board]
 generateRightMoves initBoard history side level acc
-     | null initBoard = acc
+     | null initBoard           = acc
      | 
 
 
@@ -101,9 +101,27 @@ generateRightMoves initBoard history side level acc
 -- if it can, move it, add the new row to acc 
 -- if not, move to next char
 -- NOTE that acc and the return value are NOT Boards.
+-- n is the index in a single row
 
-generateRightMovesFromRow :: Row -> Char -> [Row] -> [Row]
-generateRightMovesFromRow row side acc
+generateRightMovesFromRow :: Row -> Char -> Int -> [Row] -> [Row]
+generateRightMovesFromRow row side n acc 
+    | null row                  = acc 
+    | side == (head row)        = (generateRightMovesFromRow ((tail row) side (n + 1) ((moveRight (row n)) : acc))
+    | otherwise
+-- For the given row, shift all elements in that row
+-- to the right.
+moveRight :: Row -> Int -> Row
+moveRight row int  
+    | int == 0                   = moveRight_helper row
+    | otherwise                  = 
+-- use the can move right ans can jump right in the conidition
+
+
+moveRight_helper :: Row -> Row
+moveRight_helper row
+    | (head row) == "B" || "*" || "W"       = row
+    | otherwise                             = "-":(head row):(tail row)
+
 
 
 -- Takes in a segment of a Row and checks whether the head character
