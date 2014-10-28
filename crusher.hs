@@ -2,12 +2,14 @@
 -- Bryan Tai and Linh Phan
 -- o7m8 and a5i8
 
+
+import Data.List
  
 -- constants
-outOfBounds 		= "*"
-blackPawn 			= "B"
-whitePawn 			= "W"
-emptySpace			= "-"
+outOfBounds 	= '*'
+blackPawn 	= 'B'
+whitePawn 	= 'W'
+emptySpace	= '-'
 
 
 
@@ -19,7 +21,6 @@ emptySpace			= "-"
 
 
 
-import Data.List
 
 -- This will make our code easier to read
 type Row   = String
@@ -123,23 +124,6 @@ moveRight_helper row
     | otherwise                             = "-":(head row):(tail row)
 
 
-
--- Takes in a segment of a Row and checks whether the head character
--- can move right one spot
--- It can move right only if the adjecent spot is empty  
-canMoveRight :: Row -> Bool
-canMoveRight row 
-
-
--- Takes in a segment of a Row and checks whether the head character
--- can jump right 2 spaces.
--- It can jump right only if the spot 2 spaces away is NOT ally or out of bounds
-canJumpRight :: Row -> Bool
-canJumpRight row
-
-
-
-
 -- takes all the generated right moves from a single row from the accumulator and generates all the different possibilties of pawns movement for that single row
 
 createNewBoardsFromRows :: [Row] -> Int -> Board -> [Board]
@@ -160,6 +144,30 @@ generateDownLeftMoves
 
 
 
+--TO TEST
+
+-- Takes in a segment of a Row and checks whether the head character
+-- can jump right 2 spaces.
+-- It can jump right only if the spot 2 spaces away is NOT ally or out of bounds
+canJumpRight :: Row -> Bool
+canJumpRight row 
+     | null row || null (tail row)   = False
+     | null (tail (tail row)) 	     = False
+     | otherwise  		     = (jumpSpot !! (head row)) 
+       				    || (jumpSpot !! outOfBounds) 
+       where jumpSpot = (head (tail (tail row))) 
+
+
+-- TESTED AND WORKS
+
+-- Takes in a segment of a Row and checks whether the head character
+-- can move right one spot
+-- head char should be either whitePawn or blackPawn
+-- It can move right only if the adjecent spot is empty  
+canMoveRight :: Row -> Bool
+canMoveRight row
+     | null row || null (tail row)   = False
+     | otherwise  	      	     = (head (tail row)) == emptySpace
 
 
 
