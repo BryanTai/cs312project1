@@ -31,8 +31,8 @@ testRow   = (head testBoard)
 testAsteriskString = "**WWW*-WW-------BB-*BBB**"
 
 
-{-
-TODO
+
+--TODO
 
 crusher_o7m8 :: [String] -> Char -> Int -> Int -> IO()
 crusher_o7m8 history side searchdepth n =
@@ -74,7 +74,7 @@ stateSearch unexplored history side searchdepth n path
      | isWin (head unexplored)  =  
      |
 
-
+---------------------------------------------------------------------
 -- Takes in a Crusher Board and the current history 
 -- and returns the all the next possible Crusher Boards.
 
@@ -110,7 +110,8 @@ generateRightMovesFromRow row side acc
 -- can move right one spot
 -- It can move right only if the adjecent spot is empty  
 canMoveRight :: Row -> Bool
-canMoveRight row
+canMoveRight row 
+
 
 -- Takes in a segment of a Row and checks whether the head character
 -- can jump right 2 spaces.
@@ -139,7 +140,7 @@ generateDownLeftMoves
 
 
 
--}
+
 
 
 
