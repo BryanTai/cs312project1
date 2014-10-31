@@ -32,7 +32,7 @@ testRow   = (head testBoard)
 testAsteriskString = "**WWW*-WW-------BB-*BBB**"
 
 
-
+{-
 --TODO
 
 crusher_o7m8 :: [String] -> Char -> Int -> Int -> IO()
@@ -76,15 +76,17 @@ revertBoard board
 -- will create our square 2n-1 Board representation.
 addOutOfBounds :: String -> Int -> Int -> [Row] -> Board
 addOutOfBounds initstring n index rows
-     | null initstring   	  = []
-     | index < n      		  = (makeOOB (n-index)) ++  
-     | index > n		  =
+     | null initstring    = rows
+     | index < n      	  = addOutOfBounds lastNOfString n (index+1) 
+       	       		    		   (newTopRow   ):rows
+     | index > n	  =
+       
 
+newTopRow :: String -> Int -> Int -> Row
+newTopRow 
+(makeOOB (n - index)) ++ (firstNOfString (n + index - 1) initstring)
 
--- make outOfBounds
-makeOOB :: Int -> String
-makeOOB x =
-     replicate x outOfBounds
+newBotRow
 
 
 firstNOfString :: String
@@ -163,33 +165,39 @@ generateDownLeftMoves
 
 
 
+-}
 
 
+-- VVVVV TO TEST VVVVV
 
---TO TEST
+-- VVVVV  TESTED AND WORKS VVVVV
+
+-- make outOfBounds
+makeOOB :: Int -> String
+makeOOB x =
+     replicate x outOfBounds
 
 -- Splits a List at regular intervals
 -- Borrowed from Haskell wiki
+-- DO NOT HAND IT ZERO
 chunk :: Int -> [a] -> [[a]]
 chunk _ [] = []
 chunk n xs = y1 : chunk n y2
   where
     (y1, y2) = splitAt n xs
 
-
 -- Takes in a segment of a Row and checks whether the head character
 -- can jump right 2 spaces.
+-- head char should be either whitePawn or blackPawn
 -- It can jump right only if the spot 2 spaces away is NOT ally or out of bounds
 canJumpRight :: Row -> Bool
 canJumpRight row 
-     | null row || null (tail row)   = False
-     | null (tail (tail row)) 	     = False
-     | otherwise  		     = (jumpSpot !! (head row)) 
-       				    || (jumpSpot !! outOfBounds) 
+     | null row || null (tail row)     = False
+     | null (tail (tail row)) 	       = False
+     | (head row) /= (head (tail row)) = False
+     | otherwise  		       = (jumpSpot /= (head row)) 
+       				      && (jumpSpot /=  outOfBounds) 
        where jumpSpot = (head (tail (tail row))) 
-
-
--- TESTED AND WORKS
 
 -- Takes in a segment of a Row and checks whether the head character
 -- can move right one spot
