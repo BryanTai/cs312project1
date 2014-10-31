@@ -50,14 +50,6 @@ crusher_o7m8 history side searchdepth n =
 		   n))
 
 
--- Convert a list of our square Boards back to original String form.
--- Basically, the opposite of initializeBoards
-revertBoards :: [Board] -> [String]
-revertBoards boards =
-     map revertBoard boards
-
-revertBoard :: Board -> String
-revertBoard board 
 
 
 
@@ -159,6 +151,10 @@ generateDownLeftMoves
 -- VVVVV TO TEST VVVVV
 
 
+-- VVVVV  TESTED AND WORKS VVVVV
+
+{- ********** BOARD STATE FUNCTIONS ************** -}
+
 -- Takes in a single String that represents a hexagonal Crusher board
 -- with side length n and converts it into a square Board with
 -- asterisks included to represent empty spaces.
@@ -172,7 +168,16 @@ initializeBoards n initstrings =
      map f initstrings
      where f = initializeBoard n
 
--- VVVVV  TESTED AND WORKS VVVVV
+-- Convert a list of our square Boards back to original String form.
+-- Basically, the opposite of initializeBoards
+revertBoards :: [Board] -> [String]
+revertBoards boards =
+     map revertBoard boards
+
+revertBoard :: Board -> String
+revertBoard board =
+     filter (/=outOfBounds) (concat board) 
+
 
 -- Takes in a String representing a Board with side length n.
 -- Splits it up and returns a Board with asterisks added to 
@@ -184,7 +189,6 @@ addOutOfBounds initstring n index rows
      | null initstring    = (reverse rows)
      | index <= n      	  = (recurse (n+index-1)
        	     		    (newTopRow initstring n index))  
-    -- index > n
      | otherwise 	  = (recurse ((3*n)-index-1) 
        			    (newBotRow initstring n index))
       where recurse newIndex newRow = addOutOfBounds 
@@ -219,10 +223,12 @@ tailXOfString :: String -> Int -> String
 tailXOfString init x =
      (snd (splitAt x init))
 
--- make outOfBounds
+-- make String of outOfBounds with length x 
 makeOOB :: Int -> String
 makeOOB x =
      replicate x outOfBounds
+
+-- ********************************************
 
 -- Splits a List at regular intervals
 -- Borrowed from Haskell wiki
