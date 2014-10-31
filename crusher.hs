@@ -129,23 +129,41 @@ generateRightMoves initBoard history side level acc
 -- n is the index in a single row
 
 generateRightMovesFromRow :: Row -> Char -> Int -> [Row] -> [Row]
-generateRightMovesFromRow row side n acc 
-    | null row                  = acc 
-    | side == (head row)        = (generateRightMovesFromRow ((tail row) side (n + 1) ((moveRight (row n)) : acc))
-    | otherwise
+generateRightMovesFromRow row side index acc 
+    | null row                         = acc 
+    | row !! index == side             = (generateRightMovesFromRow 
+                                                    row 
+                                                    side 
+                                                    (index + 1) 
+                                                    ((moveRight row index) : acc))
+    | otherwise                         = (generateRightMoves 
+                                                    row
+                                                    side
+                                                    (index + 1)
+                                                    acc)
+
+
+
+
 -- For the given row, shift all elements in that row
 -- to the right.
 moveRight :: Row -> Int -> Row
-moveRight row int  
-    | int == 0                   = moveRight_helper row
-    | otherwise                  = 
--- use the can move right ans can jump right in the conidition
+moveRight row index
+    | (canMoveRight row)                 = moveRight_helper row 
+    | (canJumpRight row)                 = jumpRight_helper row 
+    | otherwise                          = []
 
-
+-- 
 moveRight_helper :: Row -> Row
 moveRight_helper row
-    | (head row) == "B" || "*" || "W"       = row
-    | otherwise                             = "-":(head row):(tail row)
+    | (head (tail row)) != emptySpace                  = row
+    | otherwise                                        = emptySpace:(head row):(tail (tail row))
+
+-- Jumps an element from a row over another element 
+jumpRight_helper :: Row -> Row
+jumpRight_helper row
+    | (head (tail row) != emptySpace                   = row
+    | otherwise                                        = (emptySPace:(head (tail row)):(head row)) ++ (tail (tail row))
 
 
 -- takes all the generated right moves from a single row from the accumulator and generates all the different possibilties of pawns movement for that single row
