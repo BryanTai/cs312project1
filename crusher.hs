@@ -26,11 +26,15 @@ emptySpace	= '-'
 type Row   = String
 type Board = [Row]
 
-testBoard = ["**WWW","*-WW-","-----","-BB-*","BBB**"]
-testRow   = (head testBoard)
+testBoard3n = ["**WWW","*-WW-","-----","-BB-*","BBB**"]
+testRow   = (head testBoard3n)
 
-testAsteriskString = "**WWW*-WW-------BB-*BBB**"
 
+
+testString3n = "WWW-WW-------BB-BBB"
+testAsteriskString3n = "**WWW*-WW-------BB-*BBB**"
+
+testString4n = "WWWW-WWW---------------------BBB-BBBB"
 
 {-
 --TODO
@@ -46,19 +50,6 @@ crusher_o7m8 history side searchdepth n =
 		   n))
 
 
-initializeBoards :: [String] -> Int -> [Board]
-initializeBoards initstrings n = 
-     map initializeBoard initstrings
-
--- Takes in a single String that represents a hexagonal Crusher board
--- with side length n and converts it into a square Board with
---  asterisks included to represent empty spaces.
-initializeBoard :: String -> Int -> Board
-initializeBoard initstring n =
-     addOutOfBounds initstring n 1 []
-
-
-
 -- Convert a list of our square Boards back to original String form.
 -- Basically, the opposite of initializeBoards
 revertBoards :: [Board] -> [String]
@@ -68,28 +59,7 @@ revertBoards boards =
 revertBoard :: Board -> String
 revertBoard board 
 
--- Takes in a String representing a Board with side length n.
--- Returns the same String but with asterisks added to 
--- represent the outOfBounds areas.
--- Initial index is 1, increases until it is 2n-1
--- When the resulting String is split into substrings of 2n-1 length, it
--- will create our square 2n-1 Board representation.
-addOutOfBounds :: String -> Int -> Int -> [Row] -> Board
-addOutOfBounds initstring n index rows
-     | null initstring    = rows
-     | index < n      	  = addOutOfBounds lastNOfString n (index+1) 
-       	       		    		   (newTopRow   ):rows
-     | index > n	  =
-       
 
-newTopRow :: String -> Int -> Int -> Row
-newTopRow 
-(makeOOB (n - index)) ++ (firstNOfString (n + index - 1) initstring)
-
-newBotRow
-
-
-firstNOfString :: String
 
 -- Generates best new Board state
 
@@ -188,7 +158,66 @@ generateDownLeftMoves
 
 -- VVVVV TO TEST VVVVV
 
+
+-- Takes in a single String that represents a hexagonal Crusher board
+-- with side length n and converts it into a square Board with
+-- asterisks included to represent empty spaces.
+initializeBoard :: Int -> String -> Board
+initializeBoard n initstring =
+     addOutOfBounds initstring n 1 []
+
+-- Initializes a whole list of Strings into a list of Boards.
+initializeBoards :: Int -> [String] -> [Board]
+initializeBoards n initstrings = 
+     map f initstrings
+     where f = initializeBoard n
+
 -- VVVVV  TESTED AND WORKS VVVVV
+
+-- Takes in a String representing a Board with side length n.
+-- Splits it up and returns a Board with asterisks added to 
+-- represent the outOfBounds areas.
+-- Initial index is 1, increases until it is 2n-1
+-- Don't worry about the math. I did all the math. It works.
+addOutOfBounds :: String -> Int -> Int -> [Row] -> Board
+addOutOfBounds initstring n index rows
+     | null initstring    = (reverse rows)
+     | index <= n      	  = (recurse (n+index-1)
+       	     		    (newTopRow initstring n index))  
+    -- index > n
+     | otherwise 	  = (recurse ((3*n)-index-1) 
+       			    (newBotRow initstring n index))
+      where recurse newIndex newRow = addOutOfBounds 
+       	       		      	      (tailXOfString initstring newIndex) 
+       	       		      	      n 
+			      	      (index+1) 
+       	       		      	      (newRow:rows)
+
+-- Creates a new top row of the board with asterisks added
+-- Note that (n - index) + (n + index - 1) = 2n-1
+
+newTopRow :: String -> Int -> Int -> Row
+newTopRow initstring n index =
+     (makeOOB (n - index)) ++ 
+     (headXOfString initstring (n + index - 1))
+
+-- Creates a new bottom row of the board with asterisks added
+-- Note that (3n - index - 1) + (index - n) = 2n-1
+
+newBotRow :: String -> Int -> Int -> Row
+newBotRow initstring n index =
+     (headXOfString initstring ((3*n) - index - 1)) ++
+     (makeOOB (index - n))
+
+-- Gets the first x elements of a String
+headXOfString :: String -> Int -> String
+headXOfString init x =
+     (fst (splitAt x init))
+
+-- Gets the last elements after index x
+tailXOfString :: String -> Int -> String
+tailXOfString init x =
+     (snd (splitAt x init))
 
 -- make outOfBounds
 makeOOB :: Int -> String
