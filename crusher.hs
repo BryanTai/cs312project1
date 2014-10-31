@@ -46,16 +46,18 @@ crusher_o7m8 history side searchdepth n =
 		   n))
 
 
-initializeBoards :: [String] -> [Board]
-initializeBoards initstrings = 
+initializeBoards :: [String] -> Int -> [Board]
+initializeBoards initstrings n = 
      map initializeBoard initstrings
 
 -- Takes in a single String that represents a hexagonal Crusher board
--- and converts it into a square Board with asterisks included
--- to represent empty spaces.
+-- with side length n and converts it into a square Board with
+--  asterisks included to represent empty spaces.
+initializeBoard :: String -> Int -> Board
+initializeBoard initstring n =
+     addOutOfBounds initstring n 1 []
 
-initializeBoard :: String -> Board
-initializeBoard initstring =
+
 
 -- Convert a list of our square Boards back to original String form.
 -- Basically, the opposite of initializeBoards
@@ -66,6 +68,26 @@ revertBoards boards =
 revertBoard :: Board -> String
 revertBoard board 
 
+-- Takes in a String representing a Board with side length n.
+-- Returns the same String but with asterisks added to 
+-- represent the outOfBounds areas.
+-- Initial index is 1, increases until it is 2n-1
+-- When the resulting String is split into substrings of 2n-1 length, it
+-- will create our square 2n-1 Board representation.
+addOutOfBounds :: String -> Int -> Int -> [Row] -> Board
+addOutOfBounds initstring n index rows
+     | null initstring   	  = []
+     | index < n      		  = (makeOOB (n-index)) ++  
+     | index > n		  =
+
+
+-- make outOfBounds
+makeOOB :: Int -> String
+makeOOB x =
+     replicate x outOfBounds
+
+
+firstNOfString :: String
 
 -- Generates best new Board state
 
@@ -145,6 +167,15 @@ generateDownLeftMoves
 
 
 --TO TEST
+
+-- Splits a List at regular intervals
+-- Borrowed from Haskell wiki
+chunk :: Int -> [a] -> [[a]]
+chunk _ [] = []
+chunk n xs = y1 : chunk n y2
+  where
+    (y1, y2) = splitAt n xs
+
 
 -- Takes in a segment of a Row and checks whether the head character
 -- can jump right 2 spaces.
