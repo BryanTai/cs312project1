@@ -83,51 +83,6 @@ generateRightMoves initBoard history side level acc
      | 
 
 
--- For the given row, check each char. 
--- If it matches side, check if it can move right
--- if it can, move it, add the new row to acc 
--- if not, move to next char
--- NOTE that acc and the return value are NOT Boards.
--- n is the index in a single row
-
-generateRightMovesFromRow :: Row -> Char -> Int -> [Row] -> [Row]
-generateRightMovesFromRow row side index acc 
-    | null row                         = acc 
-    | row !! index == side             = (generateRightMovesFromRow 
-                                                    row 
-                                                    side 
-                                                    (index + 1) 
-                                                    ((moveRight row index) : acc))
-    | otherwise                         = (generateRightMoves 
-                                                    row
-                                                    side
-                                                    (index + 1)
-                                                    acc)
-
-
-
-
--- For the given row, shift all elements in that row
--- to the right.
-moveRight :: Row -> Int -> Row
-moveRight row index
-    | (canMoveRight row)                 = moveRight_helper row 
-    | (canJumpRight row)                 = jumpRight_helper row 
-    | otherwise                          = []
-
--- 
-moveRight_helper :: Row -> Row
-moveRight_helper row
-    | (head (tail row)) != emptySpace                  = row
-    | otherwise                                        = emptySpace:(head row):(tail (tail row))
-
--- Jumps an element from a row over another element 
-jumpRight_helper :: Row -> Row
-jumpRight_helper row
-    | (head (tail row) != emptySpace                   = row
-    | otherwise                                        = (emptySPace:(head (tail row)):(head row)) ++ (tail (tail row))
-
-
 -- takes all the generated right moves from a single row from the accumulator and generates all the different possibilties of pawns movement for that single row
 
 createNewBoardsFromRows :: [Row] -> Int -> Board -> [Board]
@@ -150,8 +105,50 @@ generateDownLeftMoves
 
 -- VVVVV TO TEST VVVVV
 
+-- For the given row, check each char. 
+-- If it matches side, check if it can move right
+-- if it can, move it, add the new row to acc 
+-- if not, move to next char
+-- NOTE that acc and the return value are NOT Boards.
+-- n is the index in a single row
+-- intial index starts at 0
+
+generateRightMovesFromRow :: Row -> Char -> Int -> [Row] -> [Row]
+generateRightMovesFromRow row side index acc 
+    | index  == (length row)              = filter (/= "") acc
+    | (row !! index) == side               = (generateRightMovesFromRow 
+                                                    row 
+                                                    side 
+                                                    (index + 1) 
+                                                    ((moveRight row index) : acc))
+    | otherwise                         = (generateRightMovesFromRow 
+                                                    row
+                                                    side
+                                                    (index + 1)
+                                                    acc)
+
+
 
 -- VVVVV  TESTED AND WORKS VVVVV
+
+-- takes in a partial row and moves the first element to the right by 1
+-- requires that the given row can be moved right
+moveRight_helper :: Row -> Row
+moveRight_helper row = emptySpace:(head row):(tail (tail row))
+
+---- Jumps an element from a row over another element 
+jumpRight_helper :: Row -> Row
+jumpRight_helper row = (emptySpace:(head (tail row)):(head row):[]) ++ (tail (tail (tail row)))
+
+-- For the given row, shifts or jumps the element at the index to the right if it is a legal move.
+-- Returns "" if the move is not legal.
+moveRight :: Row -> Int -> Row
+moveRight row index
+    | (canMoveRight realRow)                    = (headXOfString row index) ++ (moveRight_helper realRow) 
+    | (canJumpRight realRow)                   = (headXOfString row index) ++ (jumpRight_helper realRow)
+    | otherwise                                 = []
+        where realRow = (tailXOfString row index)
+
 
 {- ********** BOARD STATE FUNCTIONS ************** -}
 
@@ -258,8 +255,8 @@ canJumpRight row
 -- It can move right only if the adjecent spot is empty  
 canMoveRight :: Row -> Bool
 canMoveRight row
-     | null row || null (tail row)   = False
-     | otherwise  	      	     = (head (tail row)) == emptySpace
+     | null row || null (tail row)    = False
+     | otherwise  	      	          = (head (tail row)) == emptySpace
 
 
 
