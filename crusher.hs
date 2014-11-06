@@ -36,7 +36,7 @@ testAsteriskString3n = "**WWW*-WW-------BB-*BBB**"
 
 testString4n = "WWWW-WWW---------------------BBB-BBBB"
 
-{-
+
 --TODO
 
 crusher_o7m8 :: [String] -> Char -> Int -> Int -> IO()
@@ -71,16 +71,27 @@ generateNewMoves initBoard history side =
      	    (generateRightMoves (head history) history side 0 [])
 
 
-
+-- NOT FINISHED
 -- Returns all the possible Boards that can be created by moving
 -- each pawn of the given side to the RIGHT.
 -- Looks at each row, keep track of what number row we're on. 
 -- If it has at least one side pawn, generate states from it.
 
-generateRightMoves :: Board -> [Board] -> Char -> Int -> [Board] -> [Board]
-generateRightMoves initBoard history side level acc
-     | null initBoard           = acc
-     | 
+generateRightMoves :: [Board] -> Char -> Int -> [Board] -> [Board]
+generateRightMoves history side level acc
+     | null initBoard                       = acc
+     | (initBoard !! level) == side         = (generateRightMoves 
+                                               history
+                                               side
+                                               (moveRight (row (level + 1)):acc))
+     | otherwise                            = (generateRightMoves
+                                               history
+                                               side
+                                               (level + 1)
+                                               acc)
+
+
+     where initboard = (head history)
 
 
 -- takes all the generated right moves from a single row from the accumulator and generates all the different possibilties of pawns movement for that single row
@@ -88,7 +99,13 @@ generateRightMoves initBoard history side level acc
 createNewBoardsFromRows :: [Row] -> Int -> Board -> [Board]
 createNewBoardsFromRows rows level initboard 
 
-generateLeftMoves
+generateLeftMoves :: [Row] -> Char -> Int -> [Board] -> [Board]
+generateLeftMoves row side index acc
+    map reverseBoard 
+        (generateRightMoves (reverseBoard row) side (index + 1) acc))
+
+reverseBoard :: [Row] -> [Row]
+reverseBoard row = map reverse row
 
 generateUpLeftMoves
 
@@ -100,7 +117,7 @@ generateDownLeftMoves
 
 
 
--}
+
 
 
 -- VVVVV TO TEST VVVVV
