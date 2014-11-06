@@ -7,9 +7,9 @@ import Data.List
  
 -- constants
 outOfBounds 	= '*'
-blackPawn 	= 'B'
-whitePawn 	= 'W'
-emptySpace	= '-'
+blackPawn 	    = 'B'
+whitePawn 	    = 'W'
+emptySpace	    = '-'
 
 
 
@@ -42,7 +42,7 @@ testBoard3nFirst  = ["**-WW","*-WW-","--W--","-BB-*","BBB**"]
 
 testString4n = "WWWW-WWW---------------------BBB-BBBB"
 
-{-
+
 --TODO
 
 --Returns an updated Board HIstory with our new move at the head
@@ -70,7 +70,7 @@ generateNewMoves initBoard history side =
      	    (generateRightMoves (head history) history side 0 [])
 
 
-
+-- NOT FINISHED
 -- Returns all the possible Boards that can be created by moving
 -- each pawn of the given side in initBoard to the RIGHT.
 -- Looks at each row, keep track of what number row we're on. 
@@ -78,10 +78,19 @@ generateNewMoves initBoard history side =
 
 generateRightMoves :: [Board] -> Char -> Int -> [Board] -> [Board]
 generateRightMoves history side level acc
-     | null initBoard           = acc
-     | 
+     | null initBoard                       = acc
+     | (initBoard !! level) == side         = (generateRightMoves 
+                                               history
+                                               side
+                                               (moveRight (row (level + 1)):acc))
+     | otherwise                            = (generateRightMoves
+                                               history
+                                               side
+                                               (level + 1)
+                                               acc)
 
-     where initBoard = (head history)
+
+     where initboard = (head history)
 
 
 -- takes all the generated right moves from a single row from the accumulator and generates all the different possibilties of pawns movement for that single row
@@ -89,7 +98,13 @@ generateRightMoves history side level acc
 createNewBoardsFromRows :: [Row] -> Int -> Board -> [Board]
 createNewBoardsFromRows rows level initboard 
 
-generateLeftMoves
+generateLeftMoves :: [Row] -> Char -> Int -> [Board] -> [Board]
+generateLeftMoves row side index acc
+    map reverseBoard 
+        (generateRightMoves (reverseBoard row) side (index + 1) acc))
+
+reverseBoard :: [Row] -> [Row]
+reverseBoard row = map reverse row
 
 generateUpLeftMoves
 
@@ -189,6 +204,10 @@ calculateScore :: Board -> Char -> Int
 calculateScore initBoard side =
     ((getPawnsForSide initBoard side) * 10) -
     ((getPawnsForSide initBoard (otherSide side)) * 10)
+
+-}
+
+-- VVVVV TO TEST VVVVV
 
 
 -- Takes in a Board with length n and reverses the orientation of the asterisks
