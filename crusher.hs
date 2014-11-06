@@ -7,9 +7,9 @@ import Data.List
  
 -- constants
 outOfBounds 	= '*'
-blackPawn 	= 'B'
-whitePawn 	= 'W'
-emptySpace	= '-'
+blackPawn 	    = 'B'
+whitePawn 	    = 'W'
+emptySpace	    = '-'
 
 
 
