@@ -26,20 +26,27 @@ emptySpace	    = '-'
 type Row   = String
 type Board = [Row]
 
+
+--Test Values
+
+testString3n = "WWW-WW-------BB-BBB"
 testBoard3n = ["**WWW","*-WW-","-----","-BB-*","BBB**"]
 testRow   = (head testBoard3n)
 
+testBoard3nWhite = ["**WWW","*-WW-","-----","----*","BB-**"]
 
-
-testString3n = "WWW-WW-------BB-BBB"
 testAsteriskString3n = "**WWW*-WW-------BB-*BBB**"
+
+testString3nFirst = "-WW-WW---W---BB-BBB"
+testBoard3nFirst  = ["**-WW","*-WW-","--W--","-BB-*","BBB**"]
 
 testString4n = "WWWW-WWW---------------------BBB-BBBB"
 
 
 --TODO
 
-crusher_o7m8 :: [String] -> Char -> Int -> Int -> IO()
+--Returns an updated Board HIstory with our new move at the head
+crusher_o7m8 :: [String] -> Char -> Int -> Int -> [String]
 crusher_o7m8 history side searchdepth n =
     printStrBoard( revertBoards(
 		    stateSearch 
@@ -52,19 +59,11 @@ crusher_o7m8 history side searchdepth n =
 
 
 
-
--- Generates best new Board state
-
-stateSearch :: [Board] -> [Board] -> Char -> Int -> Int -> [Board]
-stateSearch unexplored history side searchdepth n path
-     | null unexplored || searchdepth == 0 = []
-     | isWin (head unexplored)  =  
-     |
-
 ---------------------------------------------------------------------
 -- Takes in a Crusher Board and the current history 
 -- and returns the all the next possible Crusher Boards.
-
+-- If NO moves returned, then the given Crusher board is in a position
+-- where no moves are possible for the given side (thus, they lose)
 generateNewMoves :: Board -> [Board] -> Char -> [Board]
 generateNewMoves initBoard history side =
      concat THE 6 GENERATE MOVES
@@ -73,7 +72,7 @@ generateNewMoves initBoard history side =
 
 -- NOT FINISHED
 -- Returns all the possible Boards that can be created by moving
--- each pawn of the given side to the RIGHT.
+-- each pawn of the given side in initBoard to the RIGHT.
 -- Looks at each row, keep track of what number row we're on. 
 -- If it has at least one side pawn, generate states from it.
 
@@ -112,15 +111,96 @@ generateUpLeftMoves
 generateDownRightMoves
 
 --TODO: Cannot rely on generateRightMoves
+--use swapBoardAsterisks
 generateUpRightMoves
 generateDownLeftMoves
 
+**-WW
+*-WW-
+--W--
+-BB-*
+BBB**
 
+-- Generates best new Board state given game history information
+-- Uses the MINMAX algorithm up to a certain searchdepth
+-- First generates all the possible moves up til searchdepth
+-- (not considering those that are repeats)
+-- 
+
+stateSearch :: [Board] -> [Board] -> Char -> Int -> Int -> [Board]
+stateSearch unexplored history side searchdepth n path
+     | (null unexplored) || (searchdepth == 0)   = []
+     | isWin
+ (head unexplored)  =  
+     |
+
+
+
+-- Static Board Evaluator
+-- Takes in a Board and relevant information. Returns a score based
+-- on our heuristic.
+-- Cannot look ahead moves (ie. generate new states)
+-- Will not be passed a board that has already been seen by history
+-- Whoever calls this function should take care of that maybe
+-- <post heuristic here>
+boardEvaluator :: Board -> [Board] -> Char -> Int -> Int
+boardEvaluator initBoard history side n 
+     | (isCrushedWin initBoard side n)		   =  100
+     | (isCrushedWin initBoard (otherSide side) n) = -100
+     | otherwise     	= calculateScore initBoard history side
+
+-- (# of given side's pawns times 10) minus (enemy pawns times 10)
+--
+calculateScore :: Board -> [Board] -> Char -> Int
+calculateScore initBoard history side n =
+    ((getPawnsForSide initBoard side) * 10) -
+    ((getPawnsForSide initBoard (otherSide side)) * 10)
 
 
 
 
 -- VVVVV TO TEST VVVVV
+
+-- Takes in a Board with length n and reverses the orientation of the asterisks
+-- for UR and DL movements.
+swapBoardAsterisks :: Board -> Int -> Board
+swapBoardAsterisks initBoard n =
+     reverse (addOutOfBounds 
+     	     (reverse (revertBoard (map (reverse) initBoard))) 
+	     n 1 [])
+
+-- Takes in a swapped Board and sets it back to a regular Board
+unswapBoardAsterisks :: Board -> Int -> Board
+unswapBoardAsterisks swappedBoard n =
+     addOutOfBounds 
+     	     (revertBoard swappedBoard) 
+	     n 1 []
+
+
+
+-- VVVVV  TESTED AND WORKS VVVVV
+
+
+{- ********** STATIC BOARD EVALUATOR FUNCTIONS ************** -}
+
+-- Give a Board, returns the number of Pawns of the given side.
+getPawnsForSide :: Board -> Char -> Int
+getPawnsForSide initBoard side =
+     (length (filter (side ==)(revertBoard initBoard)))
+
+-- If the # of enemy pawns is less than n, the given side wins the Board.
+isCrushedWin :: Board -> Char -> Int -> Bool
+isCrushedWin initBoard side n 
+     = n > (getPawnsForSide initBoard (otherSide side))
+
+-- Given a pawn colour, simply returns the character of the other team. 
+-- Input is either 'W' or 'B'
+otherSide :: Char -> Char
+otherSide side 
+     | side == whitePawn	= blackPawn
+     | otherwise 		= whitePawn
+
+{- ********** MOVE GENERATION FUNCTIONS ************** -}
 
 -- For the given row, check each char. 
 -- If it matches side, check if it can move right
@@ -145,8 +225,6 @@ generateRightMovesFromRow row side index acc
                                                     acc)
 
 
-
--- VVVVV  TESTED AND WORKS VVVVV
 
 -- takes in a partial row and moves the first element to the right by 1
 -- requires that the given row can be moved right
@@ -192,6 +270,27 @@ revertBoard :: Board -> String
 revertBoard board =
      filter (/=outOfBounds) (concat board) 
 
+{-
+-- Takes in a String representing a Board with side length n.
+-- Splits it up and returns a Board with asterisks added to 
+-- represent the outOfBounds areas.
+-- Initial index is 1, increases until it is 2n-1
+-- Don't worry about the math. I did all the math. It works.
+addOutOfBounds :: String -> Int -> Int -> [Row] -> Board
+addOutOfBounds initstring n index rows
+     | null initstring    = (reverse rows)
+     | index <= n      	  = (recurse 
+       	     		    (n+index-1)
+       	     		    (newTopRow initstring n index))  
+     | otherwise 	  = (recurse 
+       			    ((3*n)-index-1) 
+       			    (newBotRow initstring n index))
+      where recurse newIndex newRow = addOutOfBounds 
+       	       		      	      (tailXOfString initstring newIndex) 
+       	       		      	      n 
+			      	      (index+1) 
+       	       		      	      (newRow:rows)
+-}
 
 -- Takes in a String representing a Board with side length n.
 -- Splits it up and returns a Board with asterisks added to 
@@ -201,15 +300,18 @@ revertBoard board =
 addOutOfBounds :: String -> Int -> Int -> [Row] -> Board
 addOutOfBounds initstring n index rows
      | null initstring    = (reverse rows)
-     | index <= n      	  = (recurse (n+index-1)
-       	     		    (newTopRow initstring n index))  
-     | otherwise 	  = (recurse ((3*n)-index-1) 
-       			    (newBotRow initstring n index))
-      where recurse newIndex newRow = addOutOfBounds 
-       	       		      	      (tailXOfString initstring newIndex) 
-       	       		      	      n 
-			      	      (index+1) 
-       	       		      	      (newRow:rows)
+     | index <= n      	  = addOutOfBounds
+       	     		    (tailXOfString initstring (n+index-1)) 
+       	       		    n 
+			    (index+1) 
+       	       		    ((newTopRow initstring n index):rows)
+     | otherwise 	  = addOutOfBounds
+       	     		    (tailXOfString initstring ((3*n)-index-1)) 
+       	       		    n 
+			    (index+1) 
+       	       		    ((newBotRow initstring n index):rows)
+
+
 
 -- Creates a new top row of the board with asterisks added
 -- Note that (n - index) + (n + index - 1) = 2n-1
