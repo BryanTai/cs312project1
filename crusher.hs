@@ -109,17 +109,32 @@ unswapBoardAsterisks swappedBoard n =
 
 {-}
 
+-- Generates the best next move given game history information
+-- Chooses from the 
+
+findNextMove :: [Board] -> Char -> Int -> Int -> Bool -> Board
+findNextMove history side searchdepth n findMax =
+     getMinMaxBoard side n findMax (map f (generateNewMoves (head history) side))
+     where f = (stateSearch history 
+     		    	   side
+			   (searchdepth-1)
+			   n 
+			   (not findMax)) 
+			   
+
+
 -- Generates the best new Board state given game history information
 -- Uses the MINMAX algorithm up to a certain searchdepth
 -- First generates all the possible moves up til searchdepth
 -- (not considering those that are repeats)
+-- then begins propagating up the best Board
 -- Called on EACH possible board.
 -- Initial call, findMax is True. Alternates each level down
 
-stateSearch :: [Board] -> Char -> Int -> Int -> Bool -> Board -> Board
+stateSearch :: [Board] -> Char -> Int -> Int -> Bool -> Board -> Int
 stateSearch history side searchdepth n findMax initBoard
-     | (searchdepth == 0)   = initBoard
-     | otherwise       	    = getMinMaxBoard (map f (generateNewMoves initBoard history side)) side n findMax)  	
+     | (searchdepth == 0)   = boardEvaluator side n initBoard 
+     | otherwise       	    = getMinMaxValue (map f (generateNewMoves (head history) side)) side n findMax)  	
    where f = (stateSearch (initBoard:history)
      		    	  (otherSide side) 
 		    	  (searchDepth-1)
@@ -142,11 +157,11 @@ stateSearch history side searchdepth n findMax initBoard
 -- Takes in a list of generated boards and returns the BOARD with either
 -- the highest or lowest calculated score based on minmax heuristic.
 -- minmax is either minimum or maximum
-getMinMaxBoard :: [Board] -> Char -> Int -> Bool -> Board 
-getMinMaxBoard genBoards side n findMax 
+getMinMaxBoard :: Char -> Int -> Bool -> [Board] -> Board 
+getMinMaxBoard side n findMax genBoards 
      | ((boardEvaluator side n (head genBoards)) == 
         (getMinMaxValue genBoards side n findMax))        = (head genBoards) 
-     | otherwise   = (getMinMaxBoard (tail genBoards) side n findMax)
+     | otherwise   = (getMinMaxBoard side n findMax (tail genBoards))
 
 -- Takes in a list of generated boards and returns either
 -- the highest or lowest calculated SCORE based on minmax heuristic.
@@ -210,21 +225,6 @@ otherSide side
      | otherwise 		= whitePawn
 
 {- ********** MOVE GENERATION FUNCTIONS ************** -}
-
--- Takes in a Board with length n and reverses the orientation of the asterisks
--- for UR and DL movements.
-swapBoardAsterisks :: Board -> Int -> Board
-swapBoardAsterisks initBoard n =
-     reverse (addOutOfBounds 
-     	     (reverse (revertBoard (map (reverse) initBoard))) 
-	     n 1 [])
-
--- Takes in a swapped Board and sets it back to a regular Board
-unswapBoardAsterisks :: Board -> Int -> Board
-unswapBoardAsterisks swappedBoard n =
-     addOutOfBounds 
-     	     (revertBoard swappedBoard) 
-	     n 1 []
 
 -- level starts at 0 and accumlator starts at empty
 -- returns all the possible Boards that can be created by moving
