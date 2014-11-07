@@ -78,11 +78,17 @@ generateNewMoves initBoard history side =
 
 generateRightMoves :: [Board] -> Char -> Int -> [Board] -> [Board]
 generateRightMoves history side level acc
-     | null initBoard                       = acc
-     | (initBoard !! level) == side         = (generateRightMoves 
+     | level == (length initBoard)             = acc
+     | elem side (initBoard !! level)          = (generateRightMoves 
                                                history
                                                side
-                                               (moveRight (row (level + 1)):acc))
+                                               (level + 1)
+                                               (createBoardsFromRightMoves
+                                               initboard
+                                               level
+                                               (generateRightMovesFromRow (initboard !! level) side 0 []):acc
+                                               ))
+
      | otherwise                            = (generateRightMoves
                                                history
                                                side
@@ -92,21 +98,28 @@ generateRightMoves history side level acc
 
      where initboard = (head history)
 
+createBoardsFromRightMoves :: Board -> Int -> [Row] -> [Board]
+createBoardsFromRightMoves initBoard level rows 
+    | null rows              = []
+    | otherwise              = (createBoardFromRightMove (initboard levels (tail rows)))
 
--- takes all the generated right moves from a single row from the accumulator and generates all the different possibilties of pawns movement for that single row
+-- takes a single row and creates a new board with the row it is being replaced with
+createBoardFromRightMove :: Board -> Row -> [Row] -> Int -> Board
+createBoardFromRightMove initboard row acc level 
+  | level == 0        = (level - 1)
+  | otherwise         =
 
-createNewBoardsFromRows :: [Row] -> Int -> Board -> [Board]
-createNewBoardsFromRows rows level initboard 
 
-generateLeftMoves :: [Row] -> Char -> Int -> [Board] -> [Board]
-generateLeftMoves row side index acc
+
+generateLeftMoves :: Board -> Char -> Int -> [Board] -> [Board]
+generateLeftMoves board side index acc
     map reverseBoard 
-        (generateRightMoves (reverseBoard row) side (index + 1) acc))
+        (generateRightMoves (reverseBoard board) side (index + 1) acc))
 
-reverseBoard :: [Row] -> [Row]
-reverseBoard row = map reverse row
+reverseBoard :: Board -> [Row]
+reverseBoard board = map reverse board
 
-generateUpLeftMoves
+generateUpLeftMoves 
 
 generateDownRightMoves
 
