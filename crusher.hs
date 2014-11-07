@@ -44,50 +44,50 @@ testBoard3nEmpty = ["**--","*--B-","--W--","----*","---**"]
 
 ----TODO
 
-----Returns an updated Board HIstory with our new move at the head
---crusher_o7m8 :: [String] -> Char -> Int -> Int -> [String]
---crusher_o7m8 history side searchdepth n =
---    printStrBoard( revertBoards(
---		    stateSearch 
---    		   (initializeBoard (head history)):[]
---    		   (initializeBoards  (tail history)) 
---		   side
---		   searchdepth
---		   n))
-----also check if inital Board is gameOver_o7m8
-
-
-
----------------------------------------------------------------------
-
+-- Takes in a Board history, calculates the best next move using
+-- our heuristic scores and the MINMAX algorithm and
+-- returns an updated Board history with our new move at the head
+-- also if inital Board is gameOver, return the last move again.
+crusher_o7m8 :: [String] -> Char -> Int -> Int -> [String]
+crusher_o7m8 history side searchDepth n 
+    | gameOver_o7m8 (head history) n  = (head history):history
+    | otherwise	    	  	      = nextMove:history 
+     where nextMove = revertBoard (findNextMove 
+     	   	      		    (initializeBoards n history)
+				    side
+				    searchDepth
+				    n
+				    True)
 
 
 -- Generates the best next move given game history information
--- Chooses from the 
+-- Chooses from the first new moves generated from the last move
+-- Calculates the best heuristic score using recursive calls to stateSearch
+-- Initial call, findMax is True. Indicates whether a level assigned MAX or MIN
+-- Alternates each level down
 
 findNextMove :: [Board] -> Char -> Int -> Int -> Bool -> Board
-findNextMove history side searchdepth n findMax =
-     getMinMaxBoard side n findMax (map f (generateNewMoves (head history) side))
-     where f = (stateSearch history 
-     		    	   side
-			   (searchdepth-1)
-			   n 
-			   (not findMax)) 
+findNextMove history side searchDepth n findMax =
+     (getMaxBoard history side searchDepth n findMax (generateNewMoves history side) (head history) (-1001))
+     
 			   
+-- Takes in the list of possible next moves, calls stateSearch on each
+-- to find the Board with the maximum heuristic score and returns it.
+getMaxBoard :: [Board] -> Char -> Int -> Int -> Bool -> [Board] -> Board -> Int-> Board
+getMaxBoard history side searchDepth n findMax genBoards maxBoard maxInt
+     | null genBoards    	         = maxBoard
+     | (score (head genBoards)) > maxInt = getMaxBoard history side searchDepth n findMax (tail genBoards) (head genBoards) (score (head genBoards))
+     | otherwise    		  	 = getMaxBoard history side searchDepth n findMax (tail genBoards) maxBoard maxInt
+     where score = (stateSearch history side (searchDepth-1) n (not findMax)) 
 
-
--- Generates the best new Board state given game history information
--- Uses the MINMAX algorithm up to a certain searchdepth
--- First generates all the possible moves up til searchdepth
--- (not considering those that are repeats)
--- then begins propagating up the best Board
--- Called on EACH possible board.
--- Initial call, findMax is True. Alternates each level down
-
+-- Given an initBoard, calculates the best heuristic score and propagates it up
+-- using recursion. If searchDepth is reached, return score of initBoard
+-- Else, generate new moves for the other side and return the best heuristic
+-- score among them. Choose either minimum or maximum depending on value of findMax
 stateSearch :: [Board] -> Char -> Int -> Int -> Bool -> Board -> Int
-stateSearch history side searchdepth n findMax initBoard
-     | (searchdepth == 0)   = boardEvaluator side n initBoard 
-     | otherwise       	    = getMinMaxValue (map f (generateNewMoves (head history) side)) side n findMax)  	
+stateSearch history side searchDepth n findMax initBoard
+     | (searchDepth == 0)   = boardEvaluator side n initBoard 
+     | otherwise       	    = getMinMax findMax (map f (generateNewMoves history side)) 	
    where f = (stateSearch (initBoard:history)
      		    	  (otherSide side) 
 		    	  (searchDepth-1)
@@ -104,14 +104,6 @@ stateSearch history side searchdepth n findMax initBoard
 
 {- ********** STATIC BOARD EVALUATOR FUNCTIONS ************** -}
 
--- Takes in a list of generated boards and returns the BOARD with either
--- the highest or lowest calculated score based on minmax heuristic.
--- minmax is either minimum or maximum
-getMinMaxBoard :: Char -> Int -> Bool -> [Board] -> Board 
-getMinMaxBoard side n findMax genBoards 
-     | ((boardEvaluator side n (head genBoards)) == 
-        (getMinMaxValue genBoards side n findMax))        = (head genBoards) 
-     | otherwise   = (getMinMaxBoard side n findMax (tail genBoards))
 
 -- Takes in a list of generated boards and returns either
 -- the highest or lowest calculated SCORE based on minmax heuristic.
@@ -121,6 +113,7 @@ getMinMaxValue genBoards side n findMax =
     getMinMax findMax (map k genBoards)    
     where k = (boardEvaluator side n)
 
+--Curried function
 --Evaluates to maximum or minimum depending on given boolean
 getMinMax :: Bool -> [Int] -> Int
 getMinMax findMax 
@@ -129,10 +122,11 @@ getMinMax findMax
 
 -- Checks whether a board is already over due to one side having
 -- less than n pawns
-gameOver_o7m8 :: Board -> Int -> Bool
-gameOver_o7m8 initBoard n = 
+gameOver_o7m8 :: String -> Int -> Bool
+gameOver_o7m8 initString n = 
      (isCrushedWin initBoard whitePawn n) ||
      (isCrushedWin initBoard blackPawn n)
+     where initBoard = initializeBoard n initString  
 
 -- Static Board Evaluator
 -- Takes in a Board and relevant information. Returns a score based
@@ -488,3 +482,6 @@ printStrBoard (x:xs) = do
         putStrLn x
         printStrBoard xs         
 
+printStrs :: [String] -> Int -> IO ()
+printStrs strings n =
+ printStrMatrix (initializeBoards n strings)
