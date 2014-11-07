@@ -44,7 +44,7 @@ testBoard3nEmpty = ["**--","*--B-","--W--","----*","---**"]
 
 ----TODO
 
-<<<<<<< HEAD
+
 -- Takes in a Board history, calculates the best next move using
 -- our heuristic scores and the MINMAX algorithm and
 -- returns an updated Board history with our new move at the head
