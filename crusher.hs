@@ -39,66 +39,53 @@ crusher_o7m8 history side searchDepth n
 				       side
 				       searchDepth
 				       n
-				       True)
+				       (generateNewMoves_o7m8 (initializeBoards_o7m8 n history) side) 
+				       (initializeBoard_o7m8 n (head history)) 
+				       (-9001))
 
 
--- Generates the BEST NEXT BOARD from the given initial Board (and history)
--- Chooses from the first new moves generated from the last move
+-- Returns the Board of the BEST NEXT MOVE from the given initial Board
+-- Chooses from the first new moves generated from the latest move in history.
 -- Calculates the best heuristic score for each of these moves 
 -- using recursive calls to stateSearch.
--- findMax indicates whether a level assigned MAX or MIN, initially TRUE.
--- Alternates each recursive call
-
-findNextMove_o7m8 :: [Board] -> Char -> Int -> Int -> Bool -> Board
-findNextMove_o7m8 history side searchDepth n findMax =
-     (getMaxBoard_o7m8 history 
-     		       side 
-		       searchDepth 
-		       n 
-		       findMax 
-		       (generateNewMoves_o7m8 history side) 
-		       (head history) 
-		       (-1001))
-     
-			   
--- Takes in the list of possible next moves, calls stateSearch on each
--- to find the Board with the maximum heuristic score and returns it. 
 -- maxBoard and maxInt keep track of board with current best heuristic score
 -- initial values of maxBoard and maxInt should change.
-getMaxBoard_o7m8 :: [Board] -> Char -> Int -> Int -> Bool -> [Board] -> Board -> Int-> Board
-getMaxBoard_o7m8 history side searchDepth n findMax genBoards maxBoard maxInt
+
+findNextMove_o7m8 :: [Board] -> Char -> Int -> Int -> [Board] -> Board -> Int-> Board
+findNextMove_o7m8 history side searchDepth n genBoards maxBoard maxInt
      | null genBoards          = maxBoard
      | (score (head genBoards)) > maxInt 
-       	      = getMaxBoard_o7m8 history 
+       	      = findNextMove_o7m8 history 
 	      			 side 
 				 searchDepth 
-				 n 
-				 findMax 
+				 n  
 				 (tail genBoards) 
 				 (head genBoards) 
 				 (score (head genBoards))
      | otherwise    		  	 
-       	      = getMaxBoard_o7m8 history 
+       	      = findNextMove_o7m8 history 
 	      			 side 
 				 searchDepth 
-				 n 
-				 findMax 
+				 n
 				 (tail genBoards) 
 				 maxBoard 
 				 maxInt
-     where score = (stateSearch_o7m8 history side (searchDepth-1) n (not findMax)) 
-
+     where score = (stateSearch_o7m8 history side (searchDepth-1) n True) 
+     
 -- Given an initBoard, generates next moves until searchDepth is reached
 -- then calculates the heuristic scores of the last generated boards
 -- and propagates the best ones up (determined by MINMAX) using recursion. 
 -- If searchDepth is reached (leaf node), return score of initBoard
 -- Else, generate new moves for the other side and return the best heuristic
 -- score among them. Choose either minimum or maximum depending on value of findMax
+-- findMax indicates whether a level assigned MAX or MIN, initially TRUE.
+-- Alternates each recursive call
+
 stateSearch_o7m8 :: [Board] -> Char -> Int -> Int -> Bool -> Board -> Int
 stateSearch_o7m8 history side searchDepth n findMax initBoard
      | (searchDepth == 0) = boardEvaluator_o7m8 side n initBoard 
-     | otherwise       	  = getMinMax_o7m8 findMax 
-       			    		   (map f (generateNewMoves_o7m8 history side)) 	
+     | otherwise       	  = getMinMax_o7m8 (not findMax) 
+       			    		   (map f (generateNewMoves_o7m8 history (otherSide_o7m8 side))) 
    where f = (stateSearch_o7m8 (initBoard:history)
      		    	       (otherSide_o7m8 side) 
 		    	       (searchDepth-1)
@@ -117,8 +104,8 @@ stateSearch_o7m8 history side searchDepth n findMax initBoard
 -- <post heuristic here>
 boardEvaluator_o7m8 :: Char -> Int -> Board -> Int
 boardEvaluator_o7m8 side n initBoard 
-     | (isCrushedWin_o7m8 initBoard side n)		   =  1000
-     | (isCrushedWin_o7m8 initBoard (otherSide_o7m8 side) n) = -1000
+     | (isCrushedWin_o7m8 initBoard side n)		   =  (1000 * n)
+     | (isCrushedWin_o7m8 initBoard (otherSide_o7m8 side) n) = (-1000 * n)
      | otherwise     	= calculateScore_o7m8 initBoard side 
 
 -- Calculates the score of a Board that has not won nor lost.
@@ -173,12 +160,13 @@ gameOver_o7m8 initString n =
 generateNewMoves_o7m8 :: [Board] -> Char -> [Board]
 generateNewMoves_o7m8 history side =
      (concat 
-          [(generateRightMoves_o7m8 history side 0 []),
-          (generateLeftMoves_o7m8 history side 0 []),
+          [
           (generateUpLeftMoves_o7m8 history side 0 []),
-          (generateUpRightMoves_o7m8 history side 0 []),
           (generateDownRightMoves_o7m8 history side 0 []),
-          (generateDownLeftMoves_o7m8 history side 0 [])])
+	  (generateRightMoves_o7m8 history side 0 []),
+          (generateLeftMoves_o7m8 history side 0 []),
+	  (generateUpRightMoves_o7m8 history side 0 []),          
+	  (generateDownLeftMoves_o7m8 history side 0 []) ])
 
 -- All generated moves revolve around moving to the RIGHT.
 -- Boards are transformed before being fed into generateRightMoves
@@ -278,9 +266,6 @@ getNotInHistory_o7m8 history newstates
   | otherwise          = getNotInHistory_o7m8
           (tail history)
           (filter (/= (head history)) newstates)
-
--- takes a list of rows and creates many possibilities with row it is being replaced with
--- rows is the list of rows from the generated right moves function
 
 -- Takes in an initialBoard, a list of generatedRows, and a Board level.
 -- Creates a new Board for every Row in genRows where each new 
@@ -486,14 +471,16 @@ printStrs :: [String] -> Int -> IO ()
 printStrs strings n =
      printStrMatrix (initializeBoards_o7m8 n strings)
 
-
+printStr :: String -> Int -> IO() 
+printStr string n = 
+     printStrBoard (initializeBoard_o7m8 n string)
 --Test Values
 
 testString3n = "WWW-WW-------BB-BBB"
 testAsteriskString3n = "**WWW*-WW-------BB-*BBB**"
 testBoard3n = ["**WWW","*-WW-","-----","-BB-*","BBB**"]
 
-testString3nFirst = "-WW-WW---W---BB-BBB"
+testString3nFirst = "WWW-W-W------BB-BBB"
 testBoard3nFirst  = ["**-WW","*-WW-","--W--","-BB-*","BBB**"]
 
 testBoard3nWhite = ["**WWW","*-WW-","-----","----*","BB-**"]
@@ -503,5 +490,28 @@ testString4n = "WWWW-WWW---------------------BBB-BBBB"
 
 testListOfBoard3n = [testBoard3n, testBoard3nFirst]
 testListOfString3n = [testString3nFirst, testString3n]
+
+--     W W W 
+--    - W W - 
+--   - - - - -
+--    - B B - 
+--     B B B
+
+--     W W W 
+--    - W - W 
+--   - - - - -
+--    - B B - 
+--     B B B
+
+
+-- Test function
+-- Plays a game of Crusher
+crusher_game_o7m8 :: [String] -> Char -> Int -> Int -> IO()
+crusher_game_o7m8 history side searchDepth n = 
+     if (gameOver_o7m8 (head newHistory) n) then (putStrLn "DONE")
+     else do
+     (printStr (head newHistory) n)
+     crusher_game_o7m8 newHistory (otherSide_o7m8 side) searchDepth n
+     where newHistory = (crusher_o7m8 history side searchDepth n)
 
 
