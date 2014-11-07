@@ -32,7 +32,6 @@ type Board = [Row]
 testString3n = "WWW-WW-------BB-BBB"
 testBoard3n = ["**WWW","*-WW-","-----","-BB-*","BBB**"]
 testRow   = (head testBoard3n)
-
 testBoard3nWhite = ["**WWW","*-WW-","-----","----*","BB-**"]
 
 testAsteriskString3n = "**WWW*-WW-------BB-*BBB**"
@@ -41,6 +40,8 @@ testString3nFirst = "-WW-WW---W---BB-BBB"
 testBoard3nFirst  = ["**-WW","*-WW-","--W--","-BB-*","BBB**"]
 
 testString4n = "WWWW-WWW---------------------BBB-BBBB"
+
+testListOfBoard3n = [testBoard3n, testBoard3nFirst, testBoard3nWhite]
 
 
 {-
@@ -132,45 +133,15 @@ BBB**
 -- Called on EACH possible board.
 -- Initial call, findMax is True. Alternates each level down
 
-stateSearch :: [Board] -> Char -> Int -> Int -> Bool -> Board
-stateSearch history side searchdepth n findMax
-     | (null (head history)) || (searchdepth == 1)   = []
-     | 
-
--- find the best board of the LEAF moves
-	getMinMaxBoard (generateNewMoves (head unexplored) history side)
-		       side --or otherSide?
-		       n
-		       findMax
-		       (getMinMaxScore genBoards side n (if findMax 
-		       		       		      	then maximum 
-							else minimum))
-		
--- find the best board of NEXT moves
-	getMinMaxBoard (stateSearch (head generateNewMoves)
-		       		    (otherSide side)
-				    (searchDepth-1)
-       				    n
-				    (not findMax))
-
---recursive call
-    (stateSearch (tail unexplored) 
-     		 ((head unexplored):history)
-     		 (otherSide side) 
-		 (searchDepth-1)
-		 n
-		 (not findMax)
-
-
-
-
-
--- Takes in a list of generated boards and returns the BOARD with either
--- the highest or lowest calculated score based on minmax heuristic.
--- minmax is either minimum or maximum
-getMinMaxBoard :: [Board] -> Char -> Int -> Bool -> Int -> Board 
-getMinMaxBoard genBoards side n findMax score =
-     | 
+stateSearch :: [Board] -> Char -> Int -> Int -> Bool -> Board -> Board
+stateSearch history side searchdepth n findMax initBoard
+     | (searchdepth == 0)   = initBoard
+     | otherwise       	    = getMinMaxBoard (map f (generateNewMoves initBoard history side)) side n findMax)  	
+   where f = (stateSearch (initBoard:history)
+     		    	  (otherSide side) 
+		    	  (searchDepth-1)
+		    	  n
+		    	  (not findMax))
 
 -}
 
@@ -178,13 +149,28 @@ getMinMaxBoard genBoards side n findMax score =
 -- VVVVV TO TEST VVVVV
 
 
+-- Takes in a list of generated boards and returns the BOARD with either
+-- the highest or lowest calculated score based on minmax heuristic.
+-- minmax is either minimum or maximum
+getMinMaxBoard :: [Board] -> Char -> Int -> Bool -> Board 
+getMinMaxBoard genBoards side n findMax 
+     | ((boardEvaluator side n (head genBoards)) == 
+        (getMinMaxValue genBoards side n findMax))        = (head genBoards) 
+     | otherwise   = (getMinMaxBoard (tail genBoards) side n findMax)
+
 -- Takes in a list of generated boards and returns either
 -- the highest or lowest calculated SCORE based on minmax heuristic.
 -- minmax is either minimum or maximum
-getMinMaxValue :: [Board] -> Char -> Int -> ([Int] -> Int) -> Int 
-getMinMaxValue genBoards side n minmax =
-    minmax (map k genBoards)    
+getMinMaxValue :: [Board] -> Char -> Int -> Bool -> Int 
+getMinMaxValue genBoards side n findMax =
+    getMinMax findMax (map k genBoards)    
     where k = (boardEvaluator side n)
+
+--Evaluates to maximum or minimum depending on given boolean
+getMinMax :: Bool -> [Int] -> Int
+getMinMax findMax 
+     | findMax   = maximum 
+     | otherwise = minimum
 
 -- Checks whether a board is already over due to one side having
 -- less than n pawns
@@ -215,11 +201,6 @@ calculateScore :: Board -> Char -> Int
 calculateScore initBoard side =
     ((getPawnsForSide initBoard side) * 10) -
     ((getPawnsForSide initBoard (otherSide side)) * 10)
-
--}
-
--- VVVVV TO TEST VVVVV
-
 
 -- Takes in a Board with length n and reverses the orientation of the asterisks
 -- for UR and DL movements.
@@ -303,6 +284,28 @@ moveRight row index
     | (canJumpRight realRow)                   = (headXOfString row index) ++ (jumpRight_helper realRow)
     | otherwise                                 = []
         where realRow = (tailXOfString row index)
+
+-- Takes in a segment of a Row and checks whether the head character
+-- can jump right 2 spaces.
+-- head char should be either whitePawn or blackPawn
+-- It can jump right only if the spot 2 spaces away is NOT ally or out of bounds
+canJumpRight :: Row -> Bool
+canJumpRight row 
+     | null row || null (tail row)     = False
+     | null (tail (tail row)) 	       = False
+     | (head row) /= (head (tail row)) = False
+     | otherwise  		       = (jumpSpot /= (head row)) 
+       				      && (jumpSpot /=  outOfBounds) 
+       where jumpSpot = (head (tail (tail row))) 
+
+-- Takes in a segment of a Row and checks whether the head character
+-- can move right one spot
+-- head char should be either whitePawn or blackPawn
+-- It can move right only if the adjecent spot is empty  
+canMoveRight :: Row -> Bool
+canMoveRight row
+     | null row || null (tail row)    = False
+     | otherwise  	      	          = (head (tail row)) == emptySpace
 
 
 {- ********** BOARD STATE FUNCTIONS ************** -}
@@ -405,39 +408,6 @@ makeOOB x =
      replicate x outOfBounds
 
 -- ********************************************
-
--- Splits a List at regular intervals
--- Borrowed from Haskell wiki
--- DO NOT HAND IT ZERO
-chunk :: Int -> [a] -> [[a]]
-chunk _ [] = []
-chunk n xs = y1 : chunk n y2
-  where
-    (y1, y2) = splitAt n xs
-
--- Takes in a segment of a Row and checks whether the head character
--- can jump right 2 spaces.
--- head char should be either whitePawn or blackPawn
--- It can jump right only if the spot 2 spaces away is NOT ally or out of bounds
-canJumpRight :: Row -> Bool
-canJumpRight row 
-     | null row || null (tail row)     = False
-     | null (tail (tail row)) 	       = False
-     | (head row) /= (head (tail row)) = False
-     | otherwise  		       = (jumpSpot /= (head row)) 
-       				      && (jumpSpot /=  outOfBounds) 
-       where jumpSpot = (head (tail (tail row))) 
-
--- Takes in a segment of a Row and checks whether the head character
--- can move right one spot
--- head char should be either whitePawn or blackPawn
--- It can move right only if the adjecent spot is empty  
-canMoveRight :: Row -> Bool
-canMoveRight row
-     | null row || null (tail row)    = False
-     | otherwise  	      	          = (head (tail row)) == emptySpace
-
-
 
 -- PRINT NICE -------------------
 -- Code from Connect Discussion
