@@ -77,3 +77,35 @@ genRows
   4 BBB** ]
 
 
+createBoardFromRightMove
+
+
+level == 0?
+-1
+
+-B-B*
+
+initbBoard 
+0 
+1 
+2 
+3 
+4 
+
+
+acc (returned when initBoard == null) 
+
+BBB**
+-B-B*
+-----
+*--WW
+**WWW
+
+
+0
+1
+2
+3
+4
+
+
