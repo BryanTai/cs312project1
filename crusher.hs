@@ -43,7 +43,7 @@ testBoard3nFirst  = ["**-WW","*-WW-","--W--","-BB-*","BBB**"]
 testString4n = "WWWW-WWW---------------------BBB-BBBB"
 
 
-
+{-}
 --TODO
 
 --Returns an updated Board HIstory with our new move at the head
@@ -70,61 +70,19 @@ generateNewMoves initBoard history side =
      concat THE 6 GENERATE MOVES
      	    (generateRightMoves (head history) history side 0 [])
 
+-}
 
--- NOT FINISHED
--- Returns all the possible Boards that can be created by moving
--- each pawn of the given side in initBoard to the RIGHT.
--- Looks at each row, keep track of what number row we're on. 
--- If it has at least one side pawn, generate states from it.
+generateUpLeftMoves :: [Board] -> Char -> Int -> [Board] -> [Board]
+generateUpLeftMoves history side index acc = 
+     (map transpose
+          (generateLeftMoves (transpose history) side (index + 1) acc))
 
-generateRightMoves :: [Board] -> Char -> Int -> [Board] -> [Board]
-generateRightMoves history side level acc
-     | level == (length initBoard)             = acc
-     | elem side (initBoard !! level)          = (generateRightMoves 
-                                               history
-                                               side
-                                               (level + 1)
-                                               (createBoardsFromRightMoves
-                                               initboard
-                                               level
-                                               (generateRightMovesFromRow (initboard !! level) side 0 []):acc
-                                               ))
+generateDownRightMoves :: [Board] -> Char -> Int -> [Board] -> [Board] 
+generateDownRightMoves history side index acc = 
+      (map transpose
+          (generateRightMoves (transpose history) side (index + 1) acc))
 
-     | otherwise                            = (generateRightMoves
-                                               history
-                                               side
-                                               (level + 1)
-                                               acc)
-
-
-     where initboard = (head history)
-
-createBoardsFromRightMoves :: Board -> Int -> [Row] -> [Board]
-createBoardsFromRightMoves initBoard level rows 
-    | null rows              = []
-    | otherwise              = (createBoardFromRightMove (initboard levels (tail rows)))
-
--- takes a single row and creates a new board with the row it is being replaced with
-createBoardFromRightMove :: Board -> Row -> [Row] -> Int -> Board
-createBoardFromRightMove initboard row acc level 
-  | level == 0        = (level - 1)
-  | otherwise         =
-
-
-
-generateLeftMoves :: Board -> Char -> Int -> [Board] -> [Board]
-generateLeftMoves board side index acc
-    map reverseBoard 
-        (generateRightMoves (reverseBoard board) side (index + 1) acc))
-
-
-reverseBoard :: Board -> [Row]
-reverseBoard board = map reverse board
-
-generateUpLeftMoves 
-
-generateDownRightMoves
-
+{-}
 --TODO: Cannot rely on generateRightMoves
 --use swapBoardAsterisks
 generateUpRightMoves
@@ -136,8 +94,24 @@ generateDownLeftMoves
 -BB-*
 BBB**
 
+-- Takes in a Board with length n and reverses the orientation of the asterisks
+-- for UR and DL movements.
+swapBoardAsterisks :: Board -> Int -> Board
+swapBoardAsterisks initBoard n =
+     reverse (addOutOfBounds 
+           (reverse (revertBoard (map (reverse) initBoard))) 
+       n 1 [])
 
+-- Takes in a swapped Board and sets it back to a regular Board
+unswapBoardAsterisks :: Board -> Int -> Board
+unswapBoardAsterisks swappedBoard n =
+     addOutOfBounds 
+           (revertBoard swappedBoard) 
+       n 1 []
 
+-}
+
+{-}
 
 -- Generates the best new Board state given game history information
 -- Uses the MINMAX algorithm up to a certain searchdepth
@@ -179,6 +153,8 @@ stateSearch history side searchdepth n findMax
 
 
 
+
+
 -- Takes in a list of generated boards and returns the BOARD with either
 -- the highest or lowest calculated score based on minmax heuristic.
 -- minmax is either minimum or maximum
@@ -188,8 +164,8 @@ getMinMaxBoard genBoards side n findMax score =
 
 -}
 
-
 -- VVVVV TO TEST VVVVV
+
 
 
 -- Takes in a list of generated boards and returns either
@@ -230,9 +206,7 @@ calculateScore initBoard side =
     ((getPawnsForSide initBoard side) * 10) -
     ((getPawnsForSide initBoard (otherSide side)) * 10)
 
--}
 
--- VVVVV TO TEST VVVVV
 
 
 -- Takes in a Board with length n and reverses the orientation of the asterisks
@@ -249,7 +223,6 @@ unswapBoardAsterisks swappedBoard n =
      addOutOfBounds 
      	     (revertBoard swappedBoard) 
 	     n 1 []
-
 
 
 -- VVVVV  TESTED AND WORKS VVVVV
@@ -275,6 +248,61 @@ otherSide side
      | otherwise 		= whitePawn
 
 {- ********** MOVE GENERATION FUNCTIONS ************** -}
+
+-- level starts at 0 and accumlator starts at empty
+-- returns all the possible Boards that can be created by moving
+-- each pawn of the given side in initBoard to the RIGHT.
+-- Looks at each row, keep track of what number row we're on.
+-- If it has at least one side pawn, generates states from it.
+generateLeftMoves :: [Board] -> Char -> Int -> [Board] -> [Board]
+generateLeftMoves history side index acc = (map reverseBoard 
+                                          (generateRightMoves (map reverseBoard history) side (index + 1) acc))
+
+
+reverseBoard :: Board -> Board
+reverseBoard board = map reverse board
+
+-- level starts at 0 and accumulator starts at empty
+-- Returns all the possible Boards that can be created by moving
+-- each pawn of the given side in initBoard to the RIGHT.
+-- Looks at each row, keep track of what number row we're on. 
+-- If it has at least one side pawn, generate states from it.
+
+generateRightMoves :: [Board] -> Char -> Int -> [Board] -> [Board]
+generateRightMoves history side level acc
+     | level == (length initBoard)             = acc
+     | elem side (initBoard !! level)          = (generateRightMoves history side (level + 1)
+                                               ((createBoardsFromRightMoves
+                                                initBoard
+                                                level
+                                                (generateRightMovesFromRow (initBoard !! level) side 0 []))
+                                                ++ acc)
+                                               )
+
+     | otherwise                            = (generateRightMoves
+                                               history
+                                               side
+                                               (level + 1)
+                                               acc)
+     where initBoard = (head history)
+
+-- takes a list of rows and creates many possibilities with row it is being replaced with
+-- rows is the list of rows from the generated right moves function
+createBoardsFromRightMoves :: Board -> Int -> [Row] -> [Board]
+createBoardsFromRightMoves initBoard level rows 
+    | null rows              = []
+    | otherwise              = (createBoardFromRightMove initBoard (head rows) [] level)
+                              :(createBoardsFromRightMoves initBoard level (tail rows))
+
+
+
+-- takes a single row and creates a new board with the row it is being replaced with
+createBoardFromRightMove :: Board -> Row -> [Row] -> Int -> Board
+createBoardFromRightMove initBoard row acc level 
+  | null initBoard              = reverse acc
+  | level == 0                  = (createBoardFromRightMove (tail initBoard) row (row:acc) (level-1))
+  | otherwise                   = (createBoardFromRightMove (tail initBoard) row ((head initBoard):acc) (level-1))
+
 
 -- For the given row, check each char. 
 -- If it matches side, check if it can move right
