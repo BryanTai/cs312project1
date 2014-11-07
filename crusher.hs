@@ -38,76 +38,29 @@ testString4n = "WWWW-WWW---------------------BBB-BBBB"
 
 testListOfBoard3n = [testBoard3n, testBoard3nFirst, testBoard3nWhite]
 
+testBoard3nEmpty = ["**--","*--B-","--W--","----*","---**"]
 
-{-
---TODO
 
---Returns an updated Board HIstory with our new move at the head
-crusher_o7m8 :: [String] -> Char -> Int -> Int -> [String]
-crusher_o7m8 history side searchdepth n =
-    printStrBoard( revertBoards(
-		    stateSearch 
-    		   (initializeBoard (head history)):[]
-    		   (initializeBoards  (tail history)) 
-		   side
-		   searchdepth
-		   n))
---also check if inital Board is gameOver
+
+----TODO
+
+----Returns an updated Board HIstory with our new move at the head
+--crusher_o7m8 :: [String] -> Char -> Int -> Int -> [String]
+--crusher_o7m8 history side searchdepth n =
+--    printStrBoard( revertBoards(
+--		    stateSearch 
+--    		   (initializeBoard (head history)):[]
+--    		   (initializeBoards  (tail history)) 
+--		   side
+--		   searchdepth
+--		   n))
+----also check if inital Board is gameOver_o7m8
 
 
 
 ---------------------------------------------------------------------
--- Takes in a Crusher Board and the current history 
--- and returns the all the next possible Crusher Boards.
--- If NO moves returned, then the given Crusher board is in a position
--- where no moves are possible for the given side (thus, they lose)
-generateNewMoves :: Board -> [Board] -> Char -> [Board]
-generateNewMoves initBoard history side =
-     concat THE 6 GENERATE MOVES
-     	    (generateRightMoves (head history) history side 0 [])
 
--}
 
-generateUpLeftMoves :: [Board] -> Char -> Int -> [Board] -> [Board]
-generateUpLeftMoves history side index acc = 
-     (map transpose
-          (generateLeftMoves (transpose history) side (index + 1) acc))
-
-generateDownRightMoves :: [Board] -> Char -> Int -> [Board] -> [Board] 
-generateDownRightMoves history side index acc = 
-      (map transpose
-          (generateRightMoves (transpose history) side (index + 1) acc))
-
-{-}
---TODO: Cannot rely on generateRightMoves
---use swapBoardAsterisks
-generateUpRightMoves
-generateDownLeftMoves
-
-**-WW
-*-WW-
---W--
--BB-*
-BBB**
-
--- Takes in a Board with length n and reverses the orientation of the asterisks
--- for UR and DL movements.
-swapBoardAsterisks :: Board -> Int -> Board
-swapBoardAsterisks initBoard n =
-     reverse (addOutOfBounds 
-           (reverse (revertBoard (map (reverse) initBoard))) 
-       n 1 [])
-
--- Takes in a swapped Board and sets it back to a regular Board
-unswapBoardAsterisks :: Board -> Int -> Board
-unswapBoardAsterisks swappedBoard n =
-     addOutOfBounds 
-           (revertBoard swappedBoard) 
-       n 1 []
-
--}
-
-{-}
 
 -- Generates the best next move given game history information
 -- Chooses from the 
@@ -141,12 +94,9 @@ stateSearch history side searchdepth n findMax initBoard
 		    	  n
 		    	  (not findMax))
 
--}
 
 
 -- VVVVV TO TEST VVVVV
-
-
 
 -- VVVVV  TESTED AND WORKS VVVVV
 
@@ -179,8 +129,8 @@ getMinMax findMax
 
 -- Checks whether a board is already over due to one side having
 -- less than n pawns
-gameOver :: Board -> Int -> Bool
-gameOver initBoard n = 
+gameOver_o7m8 :: Board -> Int -> Bool
+gameOver_o7m8 initBoard n = 
      (isCrushedWin initBoard whitePawn n) ||
      (isCrushedWin initBoard blackPawn n)
 
@@ -226,6 +176,62 @@ otherSide side
 
 {- ********** MOVE GENERATION FUNCTIONS ************** -}
 
+-- Takes in a Crusher Board and the current history 
+-- and returns the all the next possible Crusher Boards.
+-- If NO moves returned, then the given Crusher board is in a position
+-- where no moves are possible for the given side (thus, they lose)
+
+generateNewMoves :: [Board] -> Char -> [Board]
+generateNewMoves history side =
+     (concat 
+          [(generateRightMoves history side 0 []),
+          (generateLeftMoves history side 0 []),
+          (generateUpLeftMoves history side 0 []),
+          (generateUpRightMoves history side 0 []),
+          (generateDownRightMoves history side 0 []),
+          (generateDownLeftMoves history side 0 [])])
+
+generateDownLeftMoves :: [Board] -> Char -> Int -> [Board] -> [Board]
+generateDownLeftMoves history side index acc =
+   (map unswapBoardAsterisks
+        (generateDownRightMoves (map swapBoardAsterisks history) side index acc))
+
+generateUpRightMoves :: [Board] -> Char -> Int -> [Board] -> [Board]
+generateUpRightMoves history side index acc =
+  (map unswapBoardAsterisks 
+       (generateUpLeftMoves (map swapBoardAsterisks history) side index acc))
+
+
+generateUpLeftMoves :: [Board] -> Char -> Int -> [Board] -> [Board]
+generateUpLeftMoves history side index acc = 
+     (map transpose
+          (generateLeftMoves (map transpose history) side index acc))
+
+generateDownRightMoves :: [Board] -> Char -> Int -> [Board] -> [Board] 
+generateDownRightMoves history side index acc = 
+      (map transpose
+          (generateRightMoves (map transpose history) side index acc))
+
+-- Takes in a Board with length n and reverses the orientation of the asterisks
+-- for UR and DL movements.
+swapBoardAsterisks :: Board -> Board
+swapBoardAsterisks initBoard =
+     reverse (addOutOfBounds 
+           (reverse (revertBoard (map (reverse) initBoard))) 
+       n 1 [])
+      where n = getN initBoard
+
+-- Takes in a swapped Board and sets it back to a regular Board
+unswapBoardAsterisks :: Board -> Board
+unswapBoardAsterisks swappedBoard =
+     (addOutOfBounds 
+           (revertBoard swappedBoard) 
+       n 1 [])
+      where n = getN swappedBoard
+
+getN :: Board -> Int
+getN board = quot (length board + 1) 2		  
+		  
 -- level starts at 0 and accumlator starts at empty
 -- returns all the possible Boards that can be created by moving
 -- each pawn of the given side in initBoard to the RIGHT.
@@ -233,7 +239,7 @@ otherSide side
 -- If it has at least one side pawn, generates states from it.
 generateLeftMoves :: [Board] -> Char -> Int -> [Board] -> [Board]
 generateLeftMoves history side index acc = (map reverseBoard 
-                                          (generateRightMoves (map reverseBoard history) side (index + 1) acc))
+                                          (generateRightMoves (map reverseBoard history) side index acc))
 
 
 reverseBoard :: Board -> Board
@@ -249,7 +255,7 @@ reverseBoard board = map reverse board
 
 generateRightMoves :: [Board] -> Char -> Int -> [Board] -> [Board]
 generateRightMoves history side level acc
-     | level == (length initBoard)             = acc
+     | level == (length initBoard)             = getNotInHistory history acc
      | elem side (initBoard !! level)          = (generateRightMoves history side (level + 1)
                                                ((createBoardsFromRightMoves
                                                 initBoard
@@ -264,6 +270,16 @@ generateRightMoves history side level acc
                                                (level + 1)
                                                acc)
      where initBoard = (head history)
+
+
+-- removes any generated new states that are already in the history
+getNotInHistory :: [Board] -> [Board] -> [Board]
+getNotInHistory history newstates
+  | null history       = newstates
+  | otherwise          = getNotInHistory
+          (tail history)
+          (filter (/= (head history)) newstates)
+
 
 -- takes a list of rows and creates many possibilities with row it is being replaced with
 -- rows is the list of rows from the generated right moves function
@@ -320,10 +336,10 @@ jumpRight_helper row = (emptySpace:(head (tail row)):(head row):[]) ++ (tail (ta
 -- Returns "" if the move is not legal.
 moveRight :: Row -> Int -> Row
 moveRight row index
-    | (canMoveRight realRow)                    = (headXOfString row index) ++ (moveRight_helper realRow) 
-    | (canJumpRight realRow)                   = (headXOfString row index) ++ (jumpRight_helper realRow)
+    | (canMoveRight realRow)                    = (headXOfString_o7m8 row index) ++ (moveRight_helper realRow) 
+    | (canJumpRight realRow)                   = (headXOfString_o7m8 row index) ++ (jumpRight_helper realRow)
     | otherwise                                 = []
-        where realRow = (tailXOfString row index)
+        where realRow = (tailXOfString_o7m8 row index)
 
 -- Takes in a segment of a Row and checks whether the head character
 -- can jump right 2 spaces.
@@ -387,9 +403,9 @@ addOutOfBounds initstring n index rows
        	     		    (newTopRow initstring n index))  
      | otherwise 	  = (recurse 
        			    ((3*n)-index-1) 
-       			    (newBotRow initstring n index))
+       			    (newBotRow_o7m8 initstring n index))
       where recurse newIndex newRow = addOutOfBounds 
-       	       		      	      (tailXOfString initstring newIndex) 
+       	       		      	      (tailXOfString_o7m8 initstring newIndex) 
        	       		      	      n 
 			      	      (index+1) 
        	       		      	      (newRow:rows)
@@ -404,47 +420,45 @@ addOutOfBounds :: String -> Int -> Int -> [Row] -> Board
 addOutOfBounds initstring n index rows
      | null initstring    = (reverse rows)
      | index <= n      	  = addOutOfBounds
-       	     		    (tailXOfString initstring (n+index-1)) 
+       	     		    (tailXOfString_o7m8 initstring (n+index-1)) 
        	       		    n 
 			    (index+1) 
        	       		    ((newTopRow initstring n index):rows)
      | otherwise 	  = addOutOfBounds
-       	     		    (tailXOfString initstring ((3*n)-index-1)) 
+       	     		    (tailXOfString_o7m8 initstring ((3*n)-index-1)) 
        	       		    n 
 			    (index+1) 
-       	       		    ((newBotRow initstring n index):rows)
+       	       		    ((newBotRow_o7m8 initstring n index):rows)
 
 
 
 -- Creates a new top row of the board with asterisks added
 -- Note that (n - index) + (n + index - 1) = 2n-1
-
 newTopRow :: String -> Int -> Int -> Row
 newTopRow initstring n index =
-     (makeOOB (n - index)) ++ 
-     (headXOfString initstring (n + index - 1))
+     (makeOOB_o7m8 (n - index)) ++ 
+     (headXOfString_o7m8 initstring (n + index - 1))
 
 -- Creates a new bottom row of the board with asterisks added
 -- Note that (3n - index - 1) + (index - n) = 2n-1
-
-newBotRow :: String -> Int -> Int -> Row
-newBotRow initstring n index =
-     (headXOfString initstring ((3*n) - index - 1)) ++
-     (makeOOB (index - n))
+newBotRow_o7m8 :: String -> Int -> Int -> Row
+newBotRow_o7m8 initstring n index =
+     (headXOfString_o7m8 initstring ((3*n) - index - 1)) ++
+     (makeOOB_o7m8 (index - n))
 
 -- Gets the first x elements of a String
-headXOfString :: String -> Int -> String
-headXOfString init x =
+headXOfString_o7m8 :: String -> Int -> String
+headXOfString_o7m8 init x =
      (fst (splitAt x init))
 
 -- Gets the last elements after index x
-tailXOfString :: String -> Int -> String
-tailXOfString init x =
+tailXOfString_o7m8 :: String -> Int -> String
+tailXOfString_o7m8 init x =
      (snd (splitAt x init))
 
 -- make String of outOfBounds with length x 
-makeOOB :: Int -> String
-makeOOB x =
+makeOOB_o7m8 :: Int -> String
+makeOOB_o7m8 x =
      replicate x outOfBounds
 
 -- ********************************************
