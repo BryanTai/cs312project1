@@ -115,8 +115,23 @@ boardEvaluator_o7m8 side n initBoard
 -- TODO check if pawns in middle / edge
 calculateScore_o7m8 :: Board -> Char -> Int
 calculateScore_o7m8 initBoard side =
-    ((getPawnsForSide_o7m8 initBoard side) * 10) -
-    ((getPawnsForSide_o7m8 initBoard (otherSide_o7m8 side)) * 10)
+    (((getPawnsForSide_o7m8 initBoard side) * 10) -
+    ((getPawnsForSide_o7m8 initBoard (otherSide_o7m8 side)) * 10) +
+    (bestSide_o7m8 initBoard side))
+
+-- Calculates the score for white pawn 
+bestSideForWhite_o7m8 :: Board -> Char -> Int -> Int -> Int
+bestSideForWhite_o7m8 initBoard side level acc
+  | null initBoard            = acc
+  | otherwise                 = bestSideForWhite_o7m8 (tail initBoard) side (level+1) ((sumSide * level) + acc)
+
+    where sumSide = (length (filter (== side) (head initBoard)))  
+
+-- Calculates the best score from a Board for white or black pawn
+bestSide_o7m8 :: Board -> Char -> Int
+bestSide_o7m8 initBoard side
+  | side == 'W'         = bestSideForWhite_o7m8 initBoard side 0 0
+  | otherwise           = bestSideForWhite_o7m8 (reverse initBoard) side 0 0
 
 -- Given a Board, returns the number of Pawns of the given side.
 getPawnsForSide_o7m8 :: Board -> Char -> Int
@@ -490,6 +505,8 @@ testString4n = "WWWW-WWW---------------------BBB-BBBB"
 
 testListOfBoard3n = [testBoard3n, testBoard3nFirst]
 testListOfString3n = [testString3nFirst, testString3n]
+testBoardDiff = ["**--W","*-W--","--WB-","-WWB*","--B**"]
+
 
 --     W W W 
 --    - W W - 
@@ -513,5 +530,4 @@ crusher_game_o7m8 history side searchDepth n =
      (printStr (head newHistory) n)
      crusher_game_o7m8 newHistory (otherSide_o7m8 side) searchDepth n
      where newHistory = (crusher_o7m8 history side searchDepth n)
-
 
