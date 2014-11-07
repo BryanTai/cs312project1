@@ -15,3 +15,65 @@ PROPER BRIEF YET INFORMATIVE COMMENT
 get new changes: (but commit changes first before retrieving files)
 go to remote, select fetch from -> origin (retrieve changes)
 then go to merge, local merge (should see changes) 
+
+
+
+generateRight
+W
+1
+
+initBoard
+0 **WWW
+1 *-WW-
+2 -----
+3 -BB-*
+4 BBB**
+
+acc
+
+[ 0 **WWW
+  1 *--WW
+  2 -----
+  3 -BB-*	
+  4 BBB**
+
+  0 **WWW
+  1 *-W-W
+  2 -----
+  3 -BB-*	
+  4 BBB** ] ++ acc
+
+
+generateRightFromRow
+*-WW- 
+
+[ *--WW , 
+  *-W-W ]
+
+createBoards
+
+0 **WWW
+1 *-WW-
+2 -----
+3 -BB-*
+4 BBB**
+
+1
+
+genRows 
+[ *--WW , 
+  *-W-W ]
+ 
+[ 0 **WWW
+  1 *--WW
+  2 -----
+  3 -BB-*	
+  4 BBB**
+
+  0 **WWW
+  1 *-W-W
+  2 -----
+  3 -BB-*	
+  4 BBB** ]
+
+

@@ -43,6 +43,7 @@ testBoard3nFirst  = ["**-WW","*-WW-","--W--","-BB-*","BBB**"]
 testString4n = "WWWW-WWW---------------------BBB-BBBB"
 
 
+{-
 --TODO
 
 --Returns an updated Board HIstory with our new move at the head
@@ -101,7 +102,7 @@ createNewBoardsFromRows rows level initboard
 generateLeftMoves :: [Row] -> Char -> Int -> [Board] -> [Board]
 generateLeftMoves row side index acc
     map reverseBoard 
-        (generateRightMoves (reverseBoard row) side (index + 1) acc))
+        (generateRightMoves (reverseBoard row) side (index + 1) acc)
 
 reverseBoard :: [Row] -> [Row]
 reverseBoard row = map reverse row
@@ -121,6 +122,9 @@ generateDownLeftMoves
 -BB-*
 BBB**
 
+
+
+
 -- Generates the best new Board state given game history information
 -- Uses the MINMAX algorithm up to a certain searchdepth
 -- First generates all the possible moves up til searchdepth
@@ -128,12 +132,12 @@ BBB**
 -- Called on EACH possible board.
 -- Initial call, findMax is True. Alternates each level down
 
-stateSearch :: [Board] -> [Board] -> Char -> Int -> Int -> Bool -> Board
-stateSearch unexplored history side searchdepth n findMax
-     | (null unexplored) || (searchdepth == 0)   = []
+stateSearch :: [Board] -> Char -> Int -> Int -> Bool -> Board
+stateSearch history side searchdepth n findMax
+     | (null (head history)) || (searchdepth == 1)   = []
      | 
 
--- find the best board of the next moves
+-- find the best board of the LEAF moves
 	getMinMaxBoard (generateNewMoves (head unexplored) history side)
 		       side --or otherSide?
 		       n
@@ -141,12 +145,19 @@ stateSearch unexplored history side searchdepth n findMax
 		       (getMinMaxScore genBoards side n (if findMax 
 		       		       		      	then maximum 
 							else minimum))
-		       
+		
+-- find the best board of NEXT moves
+	getMinMaxBoard (stateSearch (head generateNewMoves)
+		       		    (otherSide side)
+				    (searchDepth-1)
+       				    n
+				    (not findMax))
+
 --recursive call
     (stateSearch (tail unexplored) 
      		 ((head unexplored):history)
      		 (otherSide side) 
-		 (searchDepth-1))
+		 (searchDepth-1)
 		 n
 		 (not findMax)
 
