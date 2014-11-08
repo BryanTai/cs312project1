@@ -5,6 +5,28 @@
 
 import Data.List
  
+
+---- KNOWN PROBLEMS:
+-- Heuristic preforms terribly whenever searchDepth is even
+-- crusher takes longer than several seconds when searchDepth is more than 4
+
+-- Takes in a Board history, calculates the best next move using
+-- our heuristic scores and the MINMAX algorithm and
+-- returns an updated Board history with our new move at the head
+-- also if inital Board is gameOver, return the last move again.
+crusher_o7m8 :: [String] -> Char -> Int -> Int -> [String]
+crusher_o7m8 history side searchDepth n 
+    | gameOver_o7m8 (head history) n  = (head history):history
+    | otherwise	    	  	      = nextMove:history 
+     where nextMove = revertBoard_o7m8 (findNextMove_o7m8 
+     	   	      		       (initializeBoards_o7m8 n history)
+				       side
+				       searchDepth
+				       n
+				       (generateNewMoves_o7m8 (initializeBoards_o7m8 n history) side) 
+				       (initializeBoard_o7m8 n (head history)) 
+				       (-9001))
+
 -- constants
 outOfBounds	    = '*'
 blackPawn 	    = 'B'
@@ -24,24 +46,6 @@ type Row   = String
 type Board = [Row]
 
 
-----TODO
-
--- Takes in a Board history, calculates the best next move using
--- our heuristic scores and the MINMAX algorithm and
--- returns an updated Board history with our new move at the head
--- also if inital Board is gameOver, return the last move again.
-crusher_o7m8 :: [String] -> Char -> Int -> Int -> [String]
-crusher_o7m8 history side searchDepth n 
-    | gameOver_o7m8 (head history) n  = (head history):history
-    | otherwise	    	  	      = nextMove:history 
-     where nextMove = revertBoard_o7m8 (findNextMove_o7m8 
-     	   	      		       (initializeBoards_o7m8 n history)
-				       side
-				       searchDepth
-				       n
-				       (generateNewMoves_o7m8 (initializeBoards_o7m8 n history) side) 
-				       (initializeBoard_o7m8 n (head history)) 
-				       (-9001))
 
 
 -- Returns the Board of the BEST NEXT MOVE from the given initial Board
@@ -90,7 +94,7 @@ stateSearch_o7m8 history side searchDepth n findMax initBoard
      		    	       (otherSide_o7m8 side) 
 		    	       (searchDepth-1)
 		    	       n
-		    	       (not findMax))
+		    	       findMax)
 
 
 {- ********** STATIC BOARD EVALUATOR FUNCTIONS ************** -}
@@ -110,16 +114,20 @@ boardEvaluator_o7m8 side n initBoard
 
 -- Calculates the score of a Board that has not won nor lost.
 -- (# of given side's pawns times 10) minus (enemy pawns times 10)
+-- SUBTRACT bestSide score.
+-- Idea is to keep pawns in our own zone and wait for enemy to approach us. 
 --
 -- TODO check for adjacent pawns
 -- TODO check if pawns in middle / edge
 calculateScore_o7m8 :: Board -> Char -> Int
 calculateScore_o7m8 initBoard side =
-    (((getPawnsForSide_o7m8 initBoard side) * 10) -
-    ((getPawnsForSide_o7m8 initBoard (otherSide_o7m8 side)) * 10) +
+    (((getPawnsForSide_o7m8 initBoard side) * 20) -
+    ((getPawnsForSide_o7m8 initBoard (otherSide_o7m8 side)) * 20) -
     (bestSide_o7m8 initBoard side))
 
--- Calculates the score for white pawn 
+-- Heuristically calculates the score for white pawns
+-- in lower positions. The more pawns deeper down the board,
+-- the higher this score is.
 bestSideForWhite_o7m8 :: Board -> Char -> Int -> Int -> Int
 bestSideForWhite_o7m8 initBoard side level acc
   | null initBoard            = acc
@@ -530,4 +538,5 @@ crusher_game_o7m8 history side searchDepth n =
      (printStr (head newHistory) n)
      crusher_game_o7m8 newHistory (otherSide_o7m8 side) searchDepth n
      where newHistory = (crusher_o7m8 history side searchDepth n)
+
 
